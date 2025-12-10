@@ -21,28 +21,31 @@
       overflow-x: auto; /* ⭐ 화면 축소로 인한 겹침 방지 */
     }
 
-    /* ⭐ 고정형 3열 포스트잇 보드 */
+    /* 전체 레이아웃이 축소되지 않고 자연스럽게 줄 맞춰짐 */
     .board{
-      width: 900px; /* 250×3 + 25×2 */
+      width: 100%;
+      max-width: 1100px;
       margin: 40px auto;
+
       display: grid;
-      grid-template-columns: 250px 250px 250px; /* 완전 고정 */
-      column-gap: 35px;
-      row-gap: 35px;
-      justify-content: center;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 35px;                /* ← 겹침 해결 핵심 */
+      justify-items: center;    /* 카드 가운데 정렬 */
     }
 
-    /* ⭐ 포스트잇 */
-      .postit{
-      width:250px;
-      padding:22px 18px;
-      border-radius:12px;
-      box-shadow:0 10px 40px var(--shadow), 0 2px 6px rgba(0,0,0,0.06);
-      transition:box-shadow .18s ease;
-      position:relative;
-      overflow:hidden;
-      min-height:200px;
-      background:linear-gradient(180deg,var(--yellow),var(--yellow-dark));
+    /* 포스트잇(겹침 방지 위해 고정폭 제거) */
+    .postit{
+      width: 300px;
+      padding: 26px 22px;
+
+      border-radius: 12px;
+      background: linear-gradient(180deg,var(--yellow),var(--yellow-dark));
+      box-shadow: 0 10px 40px var(--shadow), 0 2px 6px rgba(0,0,0,0.06);
+
+      transition: box-shadow .18s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
     }
 
     .postit:hover{
@@ -54,18 +57,20 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      top: -12px;
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      background: var(--pin);
+      top: -6px;
 
-      display: grid;
-      place-items: center;
-      color: white;
-      font-weight: 700;
+      /* 원 배경 제거 → 이모지만 표시됨 */
+      background: none;
+      width: auto;
+      height: auto;
+      border-radius: 0;
 
-      box-shadow: 0 5px 12px rgba(0,0,0,0.18);
+      display: block;
+      color: #d33;   /* 📌 색 강조 (원래 핀색) */
+      font-size: 20px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.25); /* 살짝 깊이감 */
+
+      box-shadow: none; /* 원자체 그림자 제거 */
     }
 
     /* 텍스트 */
