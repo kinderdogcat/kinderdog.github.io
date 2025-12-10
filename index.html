@@ -18,22 +18,58 @@
     body{
       margin:0;
       background:linear-gradient(180deg,var(--bg),#eef2f7);
-      overflow-x: auto; /* ⭐ 화면 축소로 인한 겹침 방지 */
+      overflow-x: auto;
+    }
+
+    /* 제목 */
+    h2{
+      width: 900px;
+      margin: 20px auto -5px auto;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 700;
+      color: #666;
+      padding-left: 10px;
+    }
+
+    /* ⭐ 필터 버튼 영역 */
+    .filter-box{
+      width: 900px;
+      margin: 5px auto 15px auto;
+      display: flex;
+      gap: 15px;
+      padding-left: 10px;
+    }
+
+    .filter-btn{
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .filter-btn.active{
+      background: #ffe58f;
+      border-color: #e0b800;
+      font-weight: 700;
     }
 
     /* ⭐ 고정형 3열 포스트잇 보드 */
     .board{
-      width: 900px; /* 250×3 + 25×2 */
-      margin: 40px auto;
+      width: 900px;
+      margin: 20px auto;
       display: grid;
-      grid-template-columns: 250px 250px 250px; /* 완전 고정 */
+      grid-template-columns: 250px 250px 250px;
       column-gap: 35px;
       row-gap: 35px;
       justify-content: center;
     }
 
     /* ⭐ 포스트잇 */
-      .postit{
+    .postit{
       width:240px;
       padding:16px 14px;
       border-radius:12px;
@@ -49,7 +85,7 @@
       box-shadow:0 18px 50px rgba(15,23,42,0.24);
     }
 
-    /* 포스트잇 ID (우측 하단) */
+    /* 포스트잇 ID */
     .postit-id{
       position:absolute;
       right:10px;
@@ -59,42 +95,29 @@
       opacity:0.6;
     }
 
-    /* 핀 */
+    /* 핀 이모지 */
     .pin{
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
       top: -2px;
 
-      /* 원 배경 제거 → 이모지만 표시됨 */
       background: none;
       width: auto;
       height: auto;
-      border-radius: 0;
 
       display: block;
-      color: #d33;   /* 📌 색 강조 (원래 핀색) */
+      color: #d33;
       font-size: 20px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.25); /* 살짝 깊이감 */
-
-      box-shadow: none; /* 원자체 그림자 제거 */
+      text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      box-shadow: none;
     }
 
     /* 텍스트 */
     h1{
-      margin: 10px 0 0 0;   /* 위쪽 여백 추가 */
+      margin: 10px 0 0 0;
       font-size:17px;
       color:#3b2a00;
-    }
-
-    h2{
-      width: 900px;     /* board와 동일 */
-      margin: 20px auto -5px auto; 
-      text-align: left; /* 왼쪽 정렬 */
-      font-size: 15px;
-      font-weight: 700;
-      color: #666;      /* 조금 더 옅게 */
-      padding-left: 10px;
     }
 
     p{
@@ -118,7 +141,15 @@
 </head>
 
 <body>
+
+  <!-- 제목 -->
   <h2 id="title"></h2>
+
+  <!-- ⭐ 필터 버튼 -->
+  <div class="filter-box">
+    <button class="filter-btn active" id="btn-dog">🐶 강아지</button>
+    <button class="filter-btn" id="btn-cat">🐱 고양이</button>
+  </div>
 
   <main class="board" id="board"></main>
 
@@ -126,6 +157,9 @@
     const SUPABASE_URL = "https://djcqvzlmzkabxilcgowx.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqY3F2emxtemthYnhpbGNnb3d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyNDkzNDIsImV4cCI6MjA4MDgyNTM0Mn0.HTR23axmJmua0LJb0u_Rj8fa-BYotVutrC26uSGkwh0";
     const TABLE = "sale";
+
+    let allData = [];      // 전체 데이터
+    let currentType = "dog"; // ⭐ 처음 로드될 때 강아지만 표시
 
     async function loadData() {
       try {
@@ -143,64 +177,98 @@
         const data = await res.json();
         if (!Array.isArray(data)) return;
 
-        // ⭐ 타입 카운트
+        allData = data;
+
+        // 오래된 순 정렬 (id 오름차순)
+        allData.sort((a, b) => a.id - b.id);
+
+        // 개, 고양이 수 계산
         const dogCount = data.filter(item => item.type === "dog").length;
         const catCount = data.filter(item => item.type === "cat").length;
 
         updateTitle(dogCount, catCount);
 
-        renderCards(data);
+        // 초기 로딩 → 강아지만 표시
+        renderCards(filterData("dog"));
+
       } catch (err) {
         console.error("Fetch Error:", err);
       }
     }
 
-function updateTitle(count1, count2) {
-  const titleEl = document.getElementById("title");
+    function updateTitle(count1, count2) {
+      const titleEl = document.getElementById("title");
+      const today = new Date().toISOString().slice(0, 10);
+      titleEl.textContent = `강아지 ${count1}마리, 고양이 ${count2}마리 등록 (${today})`;
+    }
 
-  const today = new Date();
-  const dateText = today.toISOString().slice(0, 10);
+    /* ⭐ type별 필터 */
+    function filterData(type) {
+      return allData.filter(item => item.type === type);
+    }
 
-  titleEl.textContent = `강아지 ${count1}마리, 고양이 ${count2}마리 등록 (${dateText})`;
-}
+    /* ⭐ 카드 렌더링 */
+    function renderCards(data) {
+      const board = document.getElementById("board");
+      board.innerHTML = "";
 
-function renderCards(data) {
-  const board = document.getElementById("board");
-  board.innerHTML = "";
+      data.forEach((item) => {
+        const card = document.createElement("article");
+        card.className = `postit`;
 
-  data.forEach((item) => {
-    const card = document.createElement("article");
-    card.className = `postit`;
+        card.innerHTML = `
+          <div class="pin">📌</div>
 
-    card.innerHTML = `
-      <div class="pin">📌</div>
+          <h1>${item.nick_name ?? ""}</h1>
 
-      <h1>${item.nick_name ?? ""}</h1>
+          <p>📄 ${item.specification ?? ""}</p>
+          <p>📝 ${item.memo ?? ""}</p>
 
-      <p>📄 ${item.specification ?? ""}</p>
-      <p>📝 ${item.memo ?? ""}</p>
-
-      ${
-        item.link
-          ? `
-            <div class="meta">
-              <span>🔗</span>
-              <span>
-                <a href="${item.link}" target="_blank" rel="noopener noreferrer">
-                  ${item.link}
-                </a>
-              </span>
-            </div>
-          `
-          : ""
-      }
+          ${
+            item.link
+              ? `
+                <div class="meta">
+                  <span>🔗</span>
+                  <span>
+                    <a href="${item.link}" target="_blank" rel="noopener noreferrer">
+                      ${item.link}
+                    </a>
+                  </span>
+                </div>
+              `
+              : ""
+          }
 
           <div class="postit-id">#${item.id}</div>
-    `;
+        `;
 
-    board.appendChild(card);
-  });
-}
+        board.appendChild(card);
+      });
+    }
+
+    /* ⭐ 버튼 클릭 이벤트 */
+    document.getElementById("btn-dog").addEventListener("click", () => {
+      currentType = "dog";
+      setActive("dog");
+      renderCards(filterData("dog"));
+    });
+
+    document.getElementById("btn-cat").addEventListener("click", () => {
+      currentType = "cat";
+      setActive("cat");
+      renderCards(filterData("cat"));
+    });
+
+    /* ⭐ 버튼 active 스타일 적용 */
+    function setActive(type) {
+      document.getElementById("btn-dog").classList.remove("active");
+      document.getElementById("btn-cat").classList.remove("active");
+
+      if (type === "dog")
+        document.getElementById("btn-dog").classList.add("active");
+      else
+        document.getElementById("btn-cat").classList.add("active");
+    }
 
     loadData();
   </script>
