@@ -28,7 +28,7 @@
       display: grid;
       grid-template-columns: 250px 250px 250px; /* 완전 고정 */
       column-gap: 35px;
-      row-gap: 45px;
+      row-gap: 35px;
       justify-content: center;
     }
 
@@ -82,17 +82,19 @@
 
     /* 텍스트 */
     h1{
-      margin:0;
+      margin: 10px 0 0 0;   /* 위쪽 여백 추가 */
       font-size:17px;
       color:#3b2a00;
     }
 
     h2{
-      text-align:left;
-      margin-top:20px;
-      font-size:15px;
-      font-weight:700;
-      color:#333;
+      width: 900px;     /* board와 동일 */
+      margin: 20px auto -5px auto; 
+      text-align: left; /* 왼쪽 정렬 */
+      font-size: 15px;
+      font-weight: 700;
+      color: #666;      /* 조금 더 옅게 */
+      padding-left: 10px;
     }
 
     p{
